@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Cambio</title>
+<style>
+  :root{
+    --ink:#161b22;
+    --paper:#f4efe2;
+    --paper-dim:#e9e2d0;
+    --brass:#c69a4e;
+    --brass-dim:#8a6f3c;
+    --rust:#a8462f;
+    --green:#5c8a5c;
+    --line:#3a4250;
+    --board:#12171f;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--board);
+    color:var(--paper);
+    font-family:-apple-system,BlinkMacSystemFont,"Inter","Helvetica Neue",sans-serif;
+    min-height:100vh;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .wrap{max-width:480px;margin:0 auto;padding:28px 18px 60px;}
+
+  header{margin-bottom:22px;}
+  .eyebrow{
+    font-family:Georgia,"Times New Roman",serif;
+    font-style:italic;
+    color:var(--brass);
+    font-size:14px;
+    margin:0 0 2px;
+    letter-spacing:.02em;
+  }
+  h1{
+    font-family:Georgia,"Times New Roman",serif;
+    font-weight:600;
+    font-size:32px;
+    margin:0 0 6px;
+    color:var(--paper);
+    letter-spacing:-0.01em;
+  }
+  .sub{
+    font-size:13.5px;
+    color:#8996a8;
+    line-height:1.5;
+    margin:0;
+    max-width:36ch;
+  }
+
+  .biz-switch{
+    display:flex;
+    gap:8px;
+    margin-top:20px;
+  }
+  .biz-btn{
+    flex:1;
+    background:#1c2330;
+    border:1px solid var(--line);
+    color:#8996a8;
+    padding:13px 8px;
+    border-radius:10px;
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:16px;
+    font-weight:600;
+    cursor:pointer;
+    position:relative;
+    transition:all .15s ease;
+  }
+  .biz-btn.active{
+    background:var(--ink);
+    border-color:var(--brass);
+    color:var(--paper);
+  }
+  .biz-btn.active::after{
+    content:"";
+    position:absolute;
+    left:14px;right:14px;bottom:-1px;
+    height:3px;
+    background:var(--brass);
+    border-radius:2px;
+  }
+
+  .tabs{
+    display:flex;
+    gap:6px;
+    margin:22px 0 18px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:14px;
+  }
+  .tab{
+    flex:1;
+    background:none;
+    border:1px solid var(--line);
+    color:#8996a8;
+    padding:10px 4px;
+    border-radius:8px;
+    font-size:15px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .tab.active{
+    background:var(--brass);
+    border-color:var(--brass);
+    color:var(--board);
+  }
+
+  .total-box{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:14px;
+    padding:22px 20px;
+    margin-bottom:22px;
+    position:relative;
+    overflow:hidden;
+  }
+  .total-box::before{
+    content:"";
+    position:absolute;
+    top:0;left:0;right:0;
+    height:4px;
+    background:linear-gradient(90deg,var(--brass),var(--rust));
+  }
+  .total-label{
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--brass-dim);
+    margin:0 0 4px;
+    font-weight:700;
+  }
+  .total-value{
+    font-family:"SF Mono","Menlo",monospace;
+    font-size:38px;
+    font-weight:600;
+    letter-spacing:-0.02em;
+    margin:0;
+    word-break:break-all;
+  }
+  .yesterday{
+    font-size:12.5px;
+    color:#6b6455;
+    margin:8px 0 0;
+    font-family:"SF Mono","Menlo",monospace;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .yesterday .arrow-up{color:var(--green);}
+  .yesterday .arrow-down{color:var(--rust);}
+  .breakdown{
+    margin-top:14px;
+    padding-top:12px;
+    border-top:1px solid var(--paper-dim);
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .breakdown-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:12.5px;
+    color:#6b6455;
+    font-family:"SF Mono","Menlo",monospace;
+  }
+
+  .history-link{
+    background:none;
+    border:none;
+    color:var(--brass);
+    font-size:13px;
+    font-weight:600;
+    font-family:inherit;
+    padding:0 0 22px;
+    cursor:pointer;
+  }
+  .history-panel{
+    display:none;
+    flex-direction:column;
+    gap:18px;
+    margin:-8px 0 24px;
+  }
+  .history-panel.open{display:flex;}
+  .history-group-title{
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#8996a8;
+    font-weight:700;
+    margin:0 0 8px;
+  }
+  .history-list{
+    display:flex;
+    flex-direction:column;
+    gap:1px;
+    background:var(--line);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .history-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    background:#1c2330;
+    padding:10px 12px;
+  }
+  .history-item .h-date{
+    font-size:13px;
+    color:#c7cddb;
+    text-transform:capitalize;
+  }
+  .history-item .h-value{
+    font-family:"SF Mono","Menlo",monospace;
+    font-size:14px;
+    color:var(--brass);
+  }
+  .history-empty{
+    font-size:13px;
+    color:#5b6472;
+    padding:6px 2px;
+  }
+
+  .section-title{
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#8996a8;
+    font-weight:700;
+    margin:0 0 10px;
+  }
+  .rows{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+  .row{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    background:#1c2330;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 10px;
+  }
+  .row input[type=text]{
+    flex:1;
+    min-width:0;
+    background:none;
+    border:none;
+    color:var(--paper);
+    font-family:"SF Mono","Menlo",monospace;
+    font-size:17px;
+    padding:6px 2px;
+  }
+  .row input[type=text]:focus{outline:none;}
+  .row select{
+    background:var(--board);
+    border:1px solid var(--line);
+    color:var(--brass);
+    font-weight:700;
+    font-size:14px;
+    border-radius:7px;
+    padding:8px 6px;
+    font-family:inherit;
+  }
+  .row .del{
+    background:none;
+    border:none;
+    color:#5b6472;
+    font-size:20px;
+    line-height:1;
+    padding:4px 6px;
+    cursor:pointer;
+  }
+  .row .del:active{color:var(--rust);}
+
+  .add-btn{
+    width:100%;
+    background:none;
+    border:1px dashed var(--line);
+    color:#8996a8;
+    padding:12px;
+    border-radius:10px;
+    font-size:14px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    margin-top:2px;
+  }
+  .add-btn:active{border-color:var(--brass);color:var(--brass);}
+
+  .empty{
+    color:#5b6472;
+    font-size:14px;
+    text-align:center;
+    padding:20px 0;
+  }
+
+  .rates{
+    margin-top:30px;
+    border-top:1px solid var(--line);
+    padding-top:18px;
+  }
+  .rates-toggle{
+    width:100%;
+    background:none;
+    border:none;
+    color:#8996a8;
+    font-family:inherit;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-weight:700;
+    text-align:left;
+    padding:0 0 12px;
+    cursor:pointer;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .rates-toggle .chev{transition:transform .2s ease;font-size:12px;}
+  .rates-toggle.open .chev{transform:rotate(180deg);}
+  .rates-body{display:none;flex-direction:column;gap:8px;}
+  .rates-body.open{display:flex;}
+
+  .update-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:4px;
+  }
+  .update-btn{
+    background:var(--brass);
+    border:none;
+    color:var(--board);
+    font-weight:700;
+    font-size:13px;
+    font-family:inherit;
+    padding:10px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .update-btn:active{background:var(--brass-dim);}
+  .update-btn[disabled]{opacity:.5;}
+  .update-status{
+    font-size:11.5px;
+    color:#5b6472;
+    line-height:1.4;
+  }
+  .update-status.error{color:var(--rust);}
+  .update-status.ok{color:var(--green);}
+
+  .rate-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    background:#1c2330;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 12px;
+  }
+  .rate-row label{
+    font-size:13px;
+    color:#c7cddb;
+  }
+  .rate-row input{
+    width:110px;
+    text-align:right;
+    background:none;
+    border:none;
+    color:var(--brass);
+    font-family:"SF Mono","Menlo",monospace;
+    font-size:15px;
+  }
+  .rate-row input:focus{outline:none;}
+  .rates-note{
+    font-size:12px;
+    color:#5b6472;
+    margin:10px 2px 0;
+    line-height:1.5;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">u$s · $ · € · R$</p>
+    <h1>Cambio</h1>
+    <p class="sub">Cargá montos en distintas monedas y sumalos todos en una sola.</p>
+  </header>
+
+  <div class="biz-switch" id="bizSwitch"></div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="total-box">
+    <p class="total-label">Total unificado</p>
+    <p class="total-value" id="totalValue">0,00</p>
+    <p class="yesterday" id="yesterdayLine" style="display:none;"></p>
+    <div class="breakdown" id="breakdown"></div>
+  </div>
+
+  <button class="history-link" id="historyToggle">Ver historial completo ⌄</button>
+  <div class="history-panel" id="historyPanel"></div>
+
+  <p class="section-title">Montos</p>
+  <div class="rows" id="rows"></div>
+  <div class="empty" id="emptyMsg">Todavía no cargaste ningún monto.</div>
+  <button class="add-btn" id="addBtn">+ agregar monto</button>
+
+  <div class="rates">
+    <button class="rates-toggle" id="ratesToggle">
+      <span>Cotizaciones (1 u$s =)</span>
+      <span class="chev">⌄</span>
+    </button>
+    <div class="rates-body" id="ratesBody">
+      <div class="update-row">
+        <button class="update-btn" id="updateBtn">Traer cotización online</button>
+        <span class="update-status" id="updateStatus">todavía no actualizaste</span>
+      </div>
+      <div class="rate-row">
+        <label>Pesos ($, dólar blue)</label>
+        <input type="text" inputmode="decimal" id="rate-ARS" value="1450">
+      </div>
+      <div class="rate-row">
+        <label>Euros (€)</label>
+        <input type="text" inputmode="decimal" id="rate-EUR" value="0,92">
+      </div>
+      <div class="rate-row">
+        <label>Reales (R$)</label>
+        <input type="text" inputmode="decimal" id="rate-BRL" value="5,4">
+      </div>
+      <p class="rates-note">"Traer cotización online" busca el dólar blue (dolarapi.com) y el euro/real (open.er-api.com). También las podés escribir a mano cuando quieras.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const CURRENCIES = {
+  USD: { label: "u$s", symbol: "u$s" },
+  ARS: { label: "$",   symbol: "$"   },
+  EUR: { label: "€",   symbol: "€"   },
+  BRL: { label: "R$",  symbol: "R$"  },
+};
+
+const BUSINESSES = ["Lomas", "Don Torcuato"];
+let activeBusiness = BUSINESSES[0];
+
+function slug(name){
+  return name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"_");
+}
+function stateKey(business){ return "cambio_state_" + slug(business); }
+function saveState(business){
+  try {
+    const biz = businessData[business];
+    localStorage.setItem(stateKey(business), JSON.stringify({
+      rows: biz.rows, target: biz.target, nextId: biz.nextId
+    }));
+  } catch (e) { /* modo privado u otro bloqueo: seguimos sin guardar */ }
+}
+function loadState(business){
+  try {
+    const raw = localStorage.getItem(stateKey(business));
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+// cada negocio tiene su propia lista de montos, moneda objetivo e historial
+const businessData = {};
+BUSINESSES.forEach(name => {
+  const saved = loadState(name);
+  if (saved && Array.isArray(saved.rows)){
+    businessData[name] = {
+      target: saved.target || "USD",
+      rows: saved.rows,
+      nextId: saved.nextId || (saved.rows.reduce((m,r)=>Math.max(m,r.id),0) + 1),
+    };
+  } else {
+    businessData[name] = {
+      target: "USD",
+      rows: [
+        { id: 1, amount: "", currency: "ARS" },
+        { id: 2, amount: "", currency: "USD" },
+      ],
+      nextId: 3,
+    };
+  }
+});
+
+function current(){ return businessData[activeBusiness]; }
+
+const bizSwitchEl = document.getElementById("bizSwitch");
+const tabsEl = document.getElementById("tabs");
+const rowsEl = document.getElementById("rows");
+const emptyMsg = document.getElementById("emptyMsg");
+const totalValueEl = document.getElementById("totalValue");
+const yesterdayLineEl = document.getElementById("yesterdayLine");
+const breakdownEl = document.getElementById("breakdown");
+const addBtn = document.getElementById("addBtn");
+const ratesToggle = document.getElementById("ratesToggle");
+const ratesBody = document.getElementById("ratesBody");
+const updateBtn = document.getElementById("updateBtn");
+const updateStatus = document.getElementById("updateStatus");
+const historyToggle = document.getElementById("historyToggle");
+const historyPanel = document.getElementById("historyPanel");
+
+// ---------- entrada de decimales (acepta , y .) ----------
+function sanitizeDecimal(str){
+  let cleaned = str.replace(/[^0-9.,]/g, "");
+  let out = "";
+  let sepUsed = false;
+  for (const c of cleaned){
+    if (c === "." || c === ","){
+      if (!sepUsed){ out += c; sepUsed = true; }
+    } else {
+      out += c;
+    }
+  }
+  return out;
+}
+function parseAmount(str){
+  if (!str) return 0;
+  const n = parseFloat(String(str).replace(",", "."));
+  return isNaN(n) ? 0 : n;
+}
+function attachDecimalInput(el, onChange){
+  el.addEventListener("input", () => {
+    const cursorFromEnd = el.value.length - el.selectionStart;
+    el.value = sanitizeDecimal(el.value);
+    const pos = Math.max(0, el.value.length - cursorFromEnd);
+    el.setSelectionRange(pos, pos);
+    onChange();
+  });
+}
+
+// ---------- historial (localStorage, si está disponible) ----------
+function loadHistory(business){
+  try {
+    const raw = localStorage.getItem("cambio_history_" + slug(business));
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) { return {}; }
+}
+function saveHistory(business, hist){
+  try { localStorage.setItem("cambio_history_" + slug(business), JSON.stringify(hist)); }
+  catch (e) { /* modo privado u otro bloqueo: seguimos sin guardar */ }
+}
+function dateKey(d){
+  return d.toISOString().slice(0,10);
+}
+function recordToday(business, usdTotal){
+  if (usdTotal <= 0) return;
+  const hist = loadHistory(business);
+  hist[dateKey(new Date())] = usdTotal;
+  saveHistory(business, hist);
+}
+function getYesterdayTotal(business){
+  const hist = loadHistory(business);
+  const y = new Date();
+  y.setDate(y.getDate() - 1);
+  const key = dateKey(y);
+  return hist[key];
+}
+
+// ---------- cotizaciones ----------
+function getRates(){
+  return {
+    USD: 1,
+    ARS: parseAmount(document.getElementById("rate-ARS").value),
+    EUR: parseAmount(document.getElementById("rate-EUR").value),
+    BRL: parseAmount(document.getElementById("rate-BRL").value),
+  };
+}
+function setRateInput(id, value){
+  document.getElementById(id).value = String(value).replace(".", ",");
+}
+
+async function fetchLiveRates(){
+  updateBtn.disabled = true;
+  updateBtn.textContent = "Actualizando…";
+  updateStatus.className = "update-status";
+  updateStatus.textContent = "buscando cotizaciones…";
+
+  let arsOk = false, eurBrlOk = false;
+
+  try {
+    const r = await fetch("https://dolarapi.com/v1/dolares/blue");
+    if (r.ok){
+      const d = await r.json();
+      const val = d.venta || d.compra;
+      if (val){ setRateInput("rate-ARS", val); arsOk = true; }
+    }
+  } catch (e) { /* seguimos */ }
+
+  try {
+    const r = await fetch("https://open.er-api.com/v6/latest/USD");
+    if (r.ok){
+      const d = await r.json();
+      if (d.rates){
+        if (!arsOk && d.rates.ARS){ setRateInput("rate-ARS", d.rates.ARS); arsOk = true; }
+        if (d.rates.EUR){ setRateInput("rate-EUR", d.rates.EUR); }
+        if (d.rates.BRL){ setRateInput("rate-BRL", d.rates.BRL); }
+        eurBrlOk = true;
+      }
+    }
+  } catch (e) { /* seguimos */ }
+
+  updateBtn.disabled = false;
+  updateBtn.textContent = "Traer cotización online";
+
+  if (arsOk && eurBrlOk){
+    const hora = new Date().toLocaleTimeString("es-AR", {hour:"2-digit", minute:"2-digit"});
+    updateStatus.className = "update-status ok";
+    updateStatus.textContent = "actualizado " + hora + " · dólar blue + BCE/mercado";
+  } else if (arsOk || eurBrlOk){
+    updateStatus.className = "update-status error";
+    updateStatus.textContent = "se actualizó solo una parte, revisá las cotizaciones";
+  } else {
+    updateStatus.className = "update-status error";
+    updateStatus.textContent = "no se pudo conectar. revisá tu conexión e intentá de nuevo";
+  }
+  renderTotal();
+}
+
+function toUSD(amount, currency, rates){
+  if (currency === "USD") return amount;
+  if (!rates[currency]) return 0;
+  return amount / rates[currency];
+}
+function fromUSD(usd, currency, rates){
+  if (currency === "USD") return usd;
+  return usd * rates[currency];
+}
+function fmt(n){
+  return n.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function renderBizSwitch(){
+  bizSwitchEl.innerHTML = "";
+  BUSINESSES.forEach(name => {
+    const btn = document.createElement("button");
+    btn.className = "biz-btn" + (name === activeBusiness ? " active" : "");
+    btn.textContent = name;
+    btn.onclick = () => {
+      activeBusiness = name;
+      renderBizSwitch();
+      renderTabs();
+      renderRows();
+      renderTotal();
+      if (historyPanel.classList.contains("open")) renderHistoryPanel();
+    };
+    bizSwitchEl.appendChild(btn);
+  });
+}
+
+function renderTabs(){
+  tabsEl.innerHTML = "";
+  Object.keys(CURRENCIES).forEach(code => {
+    const btn = document.createElement("button");
+    btn.className = "tab" + (code === current().target ? " active" : "");
+    btn.textContent = CURRENCIES[code].label;
+    btn.onclick = () => { current().target = code; renderTabs(); renderTotal(); };
+    tabsEl.appendChild(btn);
+  });
+}
+
+function renderRows(){
+  const biz = current();
+  rowsEl.innerHTML = "";
+  emptyMsg.style.display = biz.rows.length ? "none" : "block";
+  biz.rows.forEach(row => {
+    const div = document.createElement("div");
+    div.className = "row";
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.inputMode = "decimal";
+    input.placeholder = "0,00";
+    input.value = row.amount;
+    attachDecimalInput(input, () => { row.amount = input.value; renderTotal(); });
+
+    const select = document.createElement("select");
+    Object.keys(CURRENCIES).forEach(code => {
+      const opt = document.createElement("option");
+      opt.value = code;
+      opt.textContent = CURRENCIES[code].label;
+      if (code === row.currency) opt.selected = true;
+      select.appendChild(opt);
+    });
+    select.onchange = (e) => { row.currency = e.target.value; renderTotal(); };
+
+    const del = document.createElement("button");
+    del.className = "del";
+    del.textContent = "✕";
+    del.onclick = () => { biz.rows = biz.rows.filter(r => r.id !== row.id); renderRows(); renderTotal(); };
+
+    div.appendChild(input);
+    div.appendChild(select);
+    div.appendChild(del);
+    rowsEl.appendChild(div);
+  });
+}
+
+function renderTotal(){
+  const biz = current();
+  const rates = getRates();
+  const totalsByCurrency = { USD:0, ARS:0, EUR:0, BRL:0 };
+
+  biz.rows.forEach(row => {
+    const amount = parseAmount(row.amount);
+    if (!amount) return;
+    totalsByCurrency[row.currency] += amount;
+  });
+
+  let usdTotal = 0;
+  Object.keys(totalsByCurrency).forEach(code => {
+    usdTotal += toUSD(totalsByCurrency[code], code, rates);
+  });
+
+  const finalTotal = fromUSD(usdTotal, biz.target, rates);
+  totalValueEl.textContent = CURRENCIES[biz.target].symbol + " " + fmt(finalTotal);
+
+  breakdownEl.innerHTML = "";
+  Object.keys(totalsByCurrency).forEach(code => {
+    if (totalsByCurrency[code] === 0) return;
+    const div = document.createElement("div");
+    div.className = "breakdown-row";
+    div.innerHTML = `<span>${CURRENCIES[code].label} cargado</span><span>${fmt(totalsByCurrency[code])}</span>`;
+    breakdownEl.appendChild(div);
+  });
+
+  recordToday(activeBusiness, usdTotal);
+  saveState(activeBusiness);
+  renderYesterday();
+  if (historyPanel.classList.contains("open")) renderHistoryPanel();
+}
+
+function renderYesterday(){
+  const y = getYesterdayTotal(activeBusiness);
+  if (y === undefined){
+    yesterdayLineEl.style.display = "none";
+    return;
+  }
+  yesterdayLineEl.style.display = "flex";
+  yesterdayLineEl.innerHTML = `<span>Ayer (${activeBusiness}): u$s ${fmt(y)}</span>`;
+}
+
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
+function formatDateLabel(key){
+  // key = "YYYY-MM-DD"
+  const [y,m,d] = key.split("-").map(Number);
+  return `${d} ${MESES[m-1].slice(0,3)} ${y}`;
+}
+function formatMonthLabel(monthKey){
+  // monthKey = "YYYY-MM"
+  const [y,m] = monthKey.split("-").map(Number);
+  return `${MESES[m-1]} ${y}`;
+}
+
+function renderHistoryPanel(){
+  const hist = loadHistory(activeBusiness);
+  const dateKeys = Object.keys(hist).sort().reverse();
+
+  historyPanel.innerHTML = "";
+
+  // -- cierre de cada mes: el último día con datos dentro de cada mes --
+  const byMonth = {};
+  dateKeys.forEach(k => {
+    const monthKey = k.slice(0,7);
+    if (!byMonth[monthKey] || k > byMonth[monthKey].date){
+      byMonth[monthKey] = { date: k, value: hist[k] };
+    }
+  });
+  const monthKeys = Object.keys(byMonth).sort().reverse();
+
+  const monthSection = document.createElement("div");
+  const monthTitle = document.createElement("p");
+  monthTitle.className = "history-group-title";
+  monthTitle.textContent = "Cierre de cada mes";
+  monthSection.appendChild(monthTitle);
+
+  if (monthKeys.length === 0){
+    const empty = document.createElement("p");
+    empty.className = "history-empty";
+    empty.textContent = "Todavía no hay datos guardados para " + activeBusiness + ".";
+    monthSection.appendChild(empty);
+  } else {
+    const list = document.createElement("div");
+    list.className = "history-list";
+    monthKeys.forEach(mk => {
+      const entry = byMonth[mk];
+      const item = document.createElement("div");
+      item.className = "history-item";
+      item.innerHTML = `<span class="h-date">${formatMonthLabel(mk)} <span style="opacity:.6">(al ${formatDateLabel(entry.date)})</span></span><span class="h-value">u$s ${fmt(entry.value)}</span>`;
+      list.appendChild(item);
+    });
+    monthSection.appendChild(list);
+  }
+  historyPanel.appendChild(monthSection);
+
+  // -- detalle día por día --
+  const daySection = document.createElement("div");
+  const dayTitle = document.createElement("p");
+  dayTitle.className = "history-group-title";
+  dayTitle.textContent = "Día por día";
+  daySection.appendChild(dayTitle);
+
+  if (dateKeys.length === 0){
+    const empty = document.createElement("p");
+    empty.className = "history-empty";
+    empty.textContent = "Cuando cargues montos y los sumes, cada día va a quedar registrado acá.";
+    daySection.appendChild(empty);
+  } else {
+    const list = document.createElement("div");
+    list.className = "history-list";
+    dateKeys.forEach(k => {
+      const item = document.createElement("div");
+      item.className = "history-item";
+      item.innerHTML = `<span class="h-date">${formatDateLabel(k)}</span><span class="h-value">u$s ${fmt(hist[k])}</span>`;
+      list.appendChild(item);
+    });
+    daySection.appendChild(list);
+  }
+  historyPanel.appendChild(daySection);
+}
+
+addBtn.onclick = () => {
+  const biz = current();
+  biz.rows.push({ id: biz.nextId++, amount: "", currency: "ARS" });
+  renderRows();
+  renderTotal();
+};
+
+ratesToggle.onclick = () => {
+  ratesToggle.classList.toggle("open");
+  ratesBody.classList.toggle("open");
+};
+
+updateBtn.onclick = fetchLiveRates;
+
+historyToggle.onclick = () => {
+  const willOpen = !historyPanel.classList.contains("open");
+  historyPanel.classList.toggle("open");
+  historyToggle.textContent = willOpen ? "Ocultar historial ⌃" : "Ver historial completo ⌄";
+  if (willOpen) renderHistoryPanel();
+};
+
+["rate-ARS","rate-EUR","rate-BRL"].forEach(id => {
+  attachDecimalInput(document.getElementById(id), renderTotal);
+});
+
+renderBizSwitch();
+renderTabs();
+renderRows();
+renderTotal();
+</script>
+</body>
+</html>
